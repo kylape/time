@@ -21,10 +21,14 @@ import com.redhat.gss.time.model.Action;
 import com.redhat.gss.time.model.TimeEntry;
 import com.redhat.gss.time.model.User;
 
+import org.jboss.logging.Logger;
+
 @Path("/")
 @Stateless
 public class TimeResource
 {
+  private static Logger log = Logger.getLogger(TimeResource.class);
+
   @Inject
   private EntityManager em;
 
