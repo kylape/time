@@ -26,6 +26,8 @@ public class TimeEntry
   private Date start = null;
   private Date end = null;
 
+  public TimeEntry() {}
+
   public TimeEntry(User user, Action action, Date start, Date stop)
   {
     this.user = user;

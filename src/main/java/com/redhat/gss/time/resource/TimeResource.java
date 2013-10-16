@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
+import javax.ejb.Stateless;
 import javax.ws.rs.Path;
 import javax.ws.rs.POST;
 import javax.ws.rs.GET;
@@ -21,6 +22,7 @@ import com.redhat.gss.time.model.TimeEntry;
 import com.redhat.gss.time.model.User;
 
 @Path("/")
+@Stateless
 public class TimeResource
 {
   @Inject
@@ -30,9 +32,8 @@ public class TimeResource
   @Path("user")
   @Produces("application/json")
   @Consumes("application/json")
-  public long addUser(String first, String last, String email)
+  public long addUser(User user)
   {
-    User user = new User(first, last, email);
     if(em.contains(user))
     {
       em.merge(user);
@@ -49,9 +50,8 @@ public class TimeResource
   @Path("action")
   @Produces("application/json")
   @Consumes("application/json")
-  public long addAction(String name)
+  public long addAction(Action action)
   {
-    Action action = new Action(name);
     if(em.contains(action))
     {
       em.merge(action);

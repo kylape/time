@@ -16,6 +16,8 @@ public class User
   private String firstName = null;
   private String lastName = null;
   private String email = null;
+
+  public User() {}
   
   public User(String first, String last, String email)
   {

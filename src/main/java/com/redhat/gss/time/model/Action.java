@@ -15,6 +15,8 @@ public class Action
   private Long id = null;
   private String name = null;
 
+  public Action() {}
+
   public Action(String name)
   {
     this.name = name;
