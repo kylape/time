@@ -16,6 +16,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.FormParam;
 
 import com.redhat.gss.time.model.Action;
 import com.redhat.gss.time.model.TimeEntry;
@@ -72,45 +73,38 @@ public class TimeResource
   @Path("entry")
   @Produces("application/json")
   @Consumes("application/json")
-  public long addTimeEntry(long userId, long actionId, Date start, Date stop)
+  public long addTimeEntry(TimeEntry entry)
   {
     Date currentTime = new Date();
 
-    if(userId == 0L || actionId == 0L)
-    {
-      throw new IllegalArgumentException("Must provide userId and actionId");
-    }
-
-    User user = em.find(User.class, userId);
-    if(user == null)
-    {
-      throw new IllegalArgumentException("Invalid user ID");
-    }
-
-    Action action = em.find(Action.class, actionId);
-    if(action == null)
-    {
-      throw new IllegalArgumentException("Invalid action ID");
-    }
-
-    TimeEntry entry = new TimeEntry(user, action, start, stop);
-    if(start == null)
-    {
-      entry.setStart(currentTime);
-    }
+    if(entry == null)
+      throw new IllegalArgumentException("Time entry data not formatted correctly");
 
     if(em.contains(entry))
+      throw new IllegalArgumentException("Time entry already added");
+
+    if(entry.getUser() == null || entry.getUser().getId() == 0L)
+      throw new IllegalArgumentException("Invalid user ID");
+
+    if(entry.getAction() == null || entry.getAction().getId() == 0L)
+      throw new IllegalArgumentException("Invalid action ID");
+
+    if(entry.getStart() == null)
+      entry.setStart(currentTime);
+
+    //TODO: Think about adding back-dated entries
+
+    //Automatically stop an active entry if it appears the new entry
+    //starts after the active one
+    TimeEntry activeEntry = getActiveUserEntry(entry.getUser());
+    if(activeEntry != null && 
+       activeEntry.getStart().getTime() < entry.getStart().getTime())
     {
-      em.merge(entry);
+      activeEntry.setEnd(currentTime);
+      em.persist(activeEntry);
     }
-    else
-    {
-      if(start != null)
-      {
-        stopUser(userId);
-      }
-      em.persist(entry);
-    }
+
+    em.persist(entry);
 
     return entry.getId();
   }
@@ -118,14 +112,23 @@ public class TimeResource
   @GET
   @Consumes("application/json")
   @Produces("application/json")
-  public TimeEntry getActiveUserEntry(long userId)
+  public TimeEntry getActiveUserEntry(User user)
   {
     TypedQuery<TimeEntry> query = em.createQuery(
-      "select e from TimeEntry where e.user = ?1 and e.stop is null", 
+      "from TimeEntry e where e.user = ?1 and e.end is null", 
       TimeEntry.class
     );
-    query.setParameter(1, userId);
-    return query.getSingleResult();
+    query.setParameter(1, user);
+    List<TimeEntry> list = query.getResultList();
+
+    if(list.size() > 1)
+      throw new IllegalStateException(
+        "Invalid number of active entries: " + list.size());
+
+    if(list.size() == 0)
+      return null;
+    else
+      return list.get(0);
   }
 
   @POST
@@ -143,9 +146,10 @@ public class TimeResource
 
   @POST
   @Path("user/{id}/stop")
-  public void stopUser(@PathParam("id") long id)
+  @Consumes("application/json")
+  public void stopUser(User user)
   {
-    TimeEntry active = getActiveUserEntry(id);
+    TimeEntry active = getActiveUserEntry(user);
     if(active != null)
     {
       active.setEnd(new Date());
