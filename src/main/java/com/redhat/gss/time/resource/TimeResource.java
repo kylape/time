@@ -210,12 +210,78 @@ public class TimeResource
   @Consumes("application/json")
   public List<TimeEntry> getEntries(
     @QueryParam("user") long userId, 
+    @QueryParam("action") long actionId,
     @QueryParam("fromEpoch") long fromEpoch,
     @QueryParam("toEpoch") long toEpoch,
     @QueryParam("from") Date fromDate,
     @QueryParam("to") Date toDate,
-    @QueryParam("action") String actionId)
+    @QueryParam("inverse") boolean inverse)
   {
-    return new ArrayList<TimeEntry>();
+    StringBuilder query = new StringBuilder("from timeEntry e ");
+    Object[] params = new Object[6];
+    int paramCount = 0;
+
+    if(userId > 0L)
+    {
+      params[paramCount++] = new User(userId);
+      query.append(and(paramCount));
+      query.append("e.user = ?" + paramCount + " ");
+    }
+
+    if(actionId > 0L)
+    {
+      params[paramCount++] = new Action(actionId);
+      query.append(and(paramCount));
+      query.append("e.action = ?" + paramCount + " ");
+    }
+
+    if(fromEpoch > 0L)
+    {
+      params[paramCount++] = new Date(fromEpoch);
+      query.append(and(paramCount));
+      query.append("e.start "); 
+      query.append(inverse ? ">" : "<");
+      query.append(" ?" + paramCount + " ");
+    }
+    else if(fromDate != null)
+    {
+      params[paramCount++] = fromDate;
+      query.append(and(paramCount));
+      query.append("e.start ");
+      query.append(inverse ? ">" : "<");
+      query.append(" ?" + paramCount + " ");
+    }
+      
+    if(toEpoch > 0L)
+    {
+      params[paramCount++] = new Date(toEpoch);
+      query.append(and(paramCount));
+      query.append("e.start "); 
+      query.append(inverse ? ">" : "<");
+      query.append(" ?" + paramCount + " ");
+    }
+    else if(toDate != null)
+    {
+      params[paramCount++] = toDate;
+      query.append(and(paramCount));
+      query.append("e.start "); 
+      query.append(inverse ? ">" : "<");
+      query.append(" ?" + paramCount + " ");
+    }
+
+    TypedQuery<TimeEntry> timeQuery = em.createQuery(query.toString(), TimeEntry.class);
+    for(int i=0; i < paramCount;)
+    {
+      Object param = params[i++];
+      timeQuery.setParameter(i, param);
+    }
+
+    return timeQuery.getResultList();
+  }
+
+  private String and(int count)
+  {
+    assert count != 0;
+    return count == 1 ? "where " : "and ";
   }
 }
