@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<arquillian xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://jboss.org/schema/arquillian" xsi:schemaLocation="http://jboss.org/schema/arquillian http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
+  <engine>
+    <property name="deploymentExportPath">target/deployments</property>
+  </engine>
+  <group qualifier="jboss_managed_group" default="true">
+    <container qualifier="jbossas_managed_cluster_server_instance_1" default="false" mode="manual">
+      <protocol type="Servlet 3.0">
+        <property name="executionType">MANAGED</property>
+      </protocol>
+      <configuration>
+        <property name="jbossHome">${jboss.home.server.instance1}</property>
+        <property name="serverConfig">standalone-ha.xml</property>
+        <property name="javaVmArguments">-Xmx512m 
+          -XX:MaxPermSize=256m 
+          -Djboss.socket.binding.port-offset=702 
+          -Djboss.node.name=ServerInstance1  
+          -Djava.awt.headless=true
+          -Djboss.tx.node.id=ServerInstance1 
+          -Dcom.arjuna.orbportability.initialReferencesRoot=${jboss.home.server.instance1}
+          -Djava.net.preferIPv4Stack=true
+        </property>
+        <property name="managementPort">10701</property>
+      </configuration>
+    </container>
+    <container qualifier="jbossas_managed_cluster_server_instance_2" default="false" mode="manual">
+      <protocol type="Servlet 3.0">
+        <property name="executionType">MANAGED</property>
+      </protocol>
+      <configuration>
+        <property name="jbossHome">${jboss.home.server.instance2}</property>
+        <!-- <property name="serverConfig">standalone-server-instance-2.xml</property> -->
+        <property name="serverConfig">standalone-ha.xml</property>
+        <property name="javaVmArguments">-Xmx512m 
+          -XX:MaxPermSize=256m 
+          -Djboss.socket.binding.port-offset=703 
+          -Djboss.node.name=ServerInstance2 
+          -Djava.awt.headless=true
+          -Djboss.tx.node.id=ServerInstance2 
+          -Dcom.arjuna.orbportability.initialReferencesRoot=${jboss.home.server.instance2}
+          -Djava.net.preferIPv4Stack=true
+        </property>
+        <property name="managementPort">10702</property>
+      </configuration>
+    </container>
+  </group>
+</arquillian>
