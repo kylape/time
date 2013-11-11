@@ -2,40 +2,39 @@ package com.redhat.gss.time.test;
 
 import java.net.URISyntaxException;
 
-import org.jboss.resteasy.core.Dispatcher;
-import org.jboss.resteasy.mock.MockDispatcherFactory;
-import org.jboss.resteasy.mock.MockHttpRequest;
-import org.jboss.resteasy.mock.MockHttpResponse;
-import org.jboss.resteasy.plugins.server.resourcefactory.POJOResourceFactory;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit.InSequence;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.asset.EmptyAsset;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
 
 import org.junit.Before;
+import org.junit.runner.RunWith;
 import org.junit.Test;
 
 import com.redhat.gss.time.resource.TimeResource;
 
+@RunWith(Arquillian.class)
 public class TimeTest
 {
-  Dispatcher dispatcher;
-
-  @Before
-  public void setup() throws Exception
+  @Deployment(testable = false)
+  public static WebArchive createDeployment()
   {
-    dispatcher = MockDispatcherFactory.createDispatcher();
-    POJOResourceFactory resourceFactory = new POJOResourceFactory(TimeResource.class);
-    dispatcher.getRegistry().addResourceFactory(resourceFactory);
+    System.out.println("Creating deployment...");
+    return ShrinkWrap.create(WebArchive.class, "time.war")
+      .addPackage("com/redhat/gss/time/model")
+      .addPackage("com/redhat/gss/time/resource")
+      .addPackage("com/redhat/gss/time/cdi")
+      .addAsWebInfResource("WEB-INF/beans.xml")
+      .addAsWebInfResource("WEB-INF/h2-ds.xml")
+      .addAsResource("META-INF/persistence.xml")
+      .setWebXML("WEB-INF/web.xml");
   }
 
   @Test
   public void test() throws Exception
   {
-    System.out.println(makeRequest("/user"));
-  }
-
-  private int makeRequest(String uri) throws URISyntaxException 
-  {
-    MockHttpRequest request = MockHttpRequest.get(uri);
-    MockHttpResponse response = new MockHttpResponse();
-    dispatcher.invoke(request, response);
-    return response.getStatus();
+    System.out.println("BOOM TEST");
   }
 }

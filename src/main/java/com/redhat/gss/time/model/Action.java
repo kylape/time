@@ -17,6 +17,11 @@ public class Action
 
   public Action() {}
 
+  public Action(Long id)
+  {
+    this.id = id;
+  }
+
   public Action(String name)
   {
     this.name = name;

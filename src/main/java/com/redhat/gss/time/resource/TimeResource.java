@@ -11,6 +11,7 @@ import javax.persistence.TypedQuery;
 import javax.ejb.Stateless;
 import javax.ws.rs.Path;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.Consumes;
@@ -110,8 +111,13 @@ public class TimeResource
   }
 
   @GET
-  @Consumes("application/json")
+  @Path("user/{id}/active")
   @Produces("application/json")
+  public TimeEntry getActiveUserEntry(@PathParam("id") long id)
+  {
+    return getActiveUserEntry(new User(id));
+  }
+
   public TimeEntry getActiveUserEntry(User user)
   {
     TypedQuery<TimeEntry> query = em.createQuery(
@@ -131,7 +137,7 @@ public class TimeResource
       return list.get(0);
   }
 
-  @POST
+  @PUT
   @Path("entry/{id}/stop")
   public void stopTimeEntry(@PathParam("id") long id)
   {
@@ -144,10 +150,9 @@ public class TimeResource
     em.persist(entry);
   }
 
-  @POST
+  @PUT
   @Path("user/{id}/stop")
-  @Consumes("application/json")
-  public void stopUser(User user)
+  public void stopUser(@PathParam("id") long user)
   {
     TimeEntry active = getActiveUserEntry(user);
     if(active != null)
@@ -158,7 +163,7 @@ public class TimeResource
   }
 
   @GET
-  @Path("user/{id}")
+  @Path("user/{id: [0-9]?}")
   @Produces("application/json")
   public User getUser(@PathParam("id") long id)
   {
@@ -183,7 +188,7 @@ public class TimeResource
   }
 
   @GET
-  @Path("user/list")
+  @Path("action/list")
   @Produces("application/json")
   public List<Action> getAllActions()
   {
